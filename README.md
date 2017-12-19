@@ -4,20 +4,11 @@
 [![element-ui](https://img.shields.io/badge/element--ui-1.4.2-brightgreen.svg)](https://github.com/ElemeFE/element)
 
 
-[线上地址](TODO)
-
-
-[wiki](TODO)
-
-
-## 功能
-- 
-
 
 ## 开发
 ```bash
     # 克隆项目
-    git clone https://gitlab.com/opg.ucs/ucs-sms-frontend.git
+    git clone xxx
 
     # 安装依赖
     npm install
@@ -72,64 +63,4 @@
 ## 状态管理
 后台只有user和app配置相关状态使用vuex存在全局，其它数据都由每个业务页面自己管理。
 
-
-## 效果图
-
-#### 两步验证登录 支持微信和qq
-
-![两步验证 here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/2login.gif)
-
-#### 真正的动态换肤
-
-![真正的动态换肤](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/theme.gif)<br />
-
-#### tabs
-
-![tabs](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/tabs.gif)<br />
-
-
-
-#### 可收起侧边栏
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/leftmenu.gif)
-
-#### table拖拽排序
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/order.gif)
-
-
-#### 动态table
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/dynamictable.gif)
-
-
-#### 上传裁剪头像
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/uploadAvatar.gif)
-
-
-#### 错误统计
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/errorlog.gif)
-
-
-#### 富文本(整合七牛 打水印等个性化功能)
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/editor.gif)
-
-#### 封装table组件
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/table.gif)
-
-#### 图表
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/echarts.gif)
-
-
-#### 导出excel
-
-![enter image description here](https://gitlab.com/opg.ucs/ucs-sms-frontend/blob/master/gifs/excel.png)
-
-
-## License
 

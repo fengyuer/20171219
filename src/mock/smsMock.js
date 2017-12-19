@@ -39,7 +39,7 @@ for (let i = 0; i < msgPushCount; i++) {
       templateName: '@ctitle',
       'project|1': ['研究院', '云群', '百视通'],
       'status|1': [1, 2, 3, 4, 5],
-      'signName|1': ['签名1', '签名2'],
+      'signName|1': '@first',
       group: '东方购物游戏爱好者',
       isDel: false // 是否弃用
     })
@@ -154,8 +154,8 @@ export function queryPushTastById(config) {
  */
 export function queryPushTaskList(config) {
   const urlObj = param2Obj(config.url)
-  const { id, project, status, templateName, creater } = param2Obj(config.url)
-  const searchList = _.cloneDeep(queryLists({ id, project, status, templateName, creater }, msgPushList))
+  const { id, project, status, templateName, creater, pagination, signName } = param2Obj(config.url)
+  const searchList = _.cloneDeep(queryLists({ id, project, status, templateName, creater, pagination, signName }, msgPushList))
   const pageList = searchList.slice((urlObj.start - 1) * urlObj.pageSize, urlObj.pageSize)
   return Mock.mock({
     code: '000000',
@@ -643,7 +643,7 @@ export default {
   // getSmsTmplList,
   delSmsTmpl,
   signatures,
-  // 系统管理　接口函数　wuhui
+  // 系统管理 接口函数 wuhui
   systemGetList, systemUpdate,
   // 用户管理
   userGetList,

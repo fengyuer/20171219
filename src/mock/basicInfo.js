@@ -91,13 +91,19 @@ const SignatureUsedData = function(config) {
       id,
       usedList: usedList
     }
-
   }
 }
 
 // 短信签名启用状态
 const toOpenSignature = function(config) {
+  const { ids, isActive } = param2Obj(config.url)
+  updateIsActive(ids, signatureLists, isActive)
 
+  return {
+    code: '000000',
+    message: '成功',
+    data: {}
+  }
 }
 
  /**
@@ -186,6 +192,15 @@ const updateData = (id, newObj, lists) => {
   lists.find((v, index) => {
     if (v.id === id) {
       lists[index] = newObj
+    }
+  })
+}
+
+// 启用
+const updateIsActive = (id, lists, isActive) => {
+  lists.forEach((v, index) => {
+    if (v.id === id) {
+      lists[index].isActive = !isActive
     }
   })
 }

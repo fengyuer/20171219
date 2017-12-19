@@ -62,7 +62,7 @@
                     width="50" 
                     :selectable='checkboxInit'></el-table-column>
                 <el-table-column property="id" label="通道id" width="150"></el-table-column>
-                <el-table-column property="name" label="通道名称" width="200"></el-table-column>
+                <el-table-column property="name" label="通道名称"></el-table-column>
                 <el-table-column property="price" label="通道单价"></el-table-column>
             </el-table>
             <div slot="footer" class="dialog-footer">
@@ -208,13 +208,5 @@ import { fetchAddSignature, fetchChannels } from "@/api/smsApi";
                 }
             }
         }
-    }
-    .channel_select_value{
-        position: absolute;
-        z-index: 2;
-        background: #fff;
-        margin-top: 7px;
-        margin-left: 17px;
-        padding: 1px 4px;
     }
 </style>

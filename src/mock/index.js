@@ -33,16 +33,18 @@ Mock.mock(/\/sms\/numbers/, 'get', statistics.queryStatisList)
 // sms短信模板-YYQ
 Mock.mock(/\/sms\/templates/, 'get', smsTmplMock.getSmsTmplList)
 Mock.mock(/\/sms\/templates\/delete/, 'delete', smsTmplMock.delSmsTmpl)
-
+Mock.mock(/\/sms\/templates/, 'post', smsTmplMock.addSmsTmpl)
 Mock.mock(/\/sms\/templates/, 'put', smsTmplMock.updateSmsTmpl)
+Mock.mock(/\/sms\/tasks/, 'get', smsTmplMock.querySmsTmplTask)
 
 /* ************ 短信任务start-chn ********* */
 // sms推送任务管理  -sll
+Mock.mock(/\/sms\/taskDetail/, 'get', smsMock.queryPushTaskById)// 查询任务详情
 Mock.mock(/\/sms\/task/, 'get', smsMock.getMsgPushList)// 查询列表
 Mock.mock(/\/sms\/task/, 'delete', smsMock.delMsgPush)
 Mock.mock(/\/sms\/marketTask/, 'post', smsMock.addPushTask)
 Mock.mock(/\/sms\/apiTask/, 'post', smsMock.addApiTask)
-Mock.mock(/\/sms\/taskDetail/, 'get', smsMock.queryPushTastById)
+
 Mock.mock(/\/sms\/record/, 'get', smsMock.queryLogById)
 Mock.mock(/\/sms\/record\/export/, 'get', smsMock.exportTast)
 /* ************ 短信任务end-chn ********* */
@@ -53,7 +55,7 @@ Mock.mock(/\/sms\/record\/export/, 'get', smsMock.exportTast)
 Mock.mock(/\/sms\/signatures/, 'get', BasicInfo.querySignatures)
 Mock.mock(/\/sms\/signatures\/add/, 'post', BasicInfo.addSignature)
 Mock.mock(/\/sms\/signatures\/delete/, 'delete', BasicInfo.delSignature)
-Mock.mock(/\/sms\/signatures\/toOpen/, 'post', BasicInfo.toOpenSignature)
+Mock.mock(/\/sms\/tasks/, 'post', BasicInfo.signatureUsedTasks)
 
 // 短信通道-F
 Mock.mock(/\/sms\/channels/, 'get', BasicInfo.queryChannels)
@@ -75,6 +77,5 @@ Mock.mock(/\/api-dev\/system\/role/, 'put', smsMock.roleCreate)
 Mock.mock(/\/api-dev\/system\/role/, 'delete', smsMock.roleDelete)
 
 Mock.mock(/\/api-dev\/sms\/sysMgr\/usrdiv/, 'get', smsMock.getPropelList)
-Mock.mock(/\/api-dev\/sms\/sysMgr\/usrdiv\/taskDetail/, 'get', smsMock.getTaskList)
 
 export default Mock

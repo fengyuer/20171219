@@ -39,7 +39,7 @@ export function addApiTask(query) {
  * 根据Id查询任务详情接口：2.1.3
  * @param {*} query
  */
-export function queryPushTastById(query) {
+export function queryPushTaskById(query) {
   return fetch({
     url: '/sms/taskDetail',
     method: 'get',
@@ -123,14 +123,16 @@ export function fetchDelSignatures(query) {
     params: query
   })
 }
-// 启用-F
-export function fetchToOpenSignature(query) {
+
+// 签名应用任务列表-F
+export function fetchUsedTasks(query) {
   return fetch({
-    url: '/sms/signatures/toOpen',
+    url: '/sms/tasks',
     method: 'post',
     params: query
   })
 }
+
 /**
  * author: Fiona
  * content: 短信通道
@@ -213,6 +215,23 @@ export function fetchUpdateSmeTmpl(data) {
     params: data
   })
 }
+// 新增短信模板接口-YYQ
+export function fetchAddSmeTmpl(data) {
+  return fetch({
+    url: '/sms/templates',
+    method: 'post',
+    params: data
+  })
+}
+// 2.1.23	根据短信模板id列表查询待执行和正在执行的任务 -YYQ
+export function fetchQuerySmsTmplTask(query) {
+  return fetch({
+    url: '/sms/tasks',
+    method: 'get',
+    params: query
+  })
+}
+
 /**
  * author:wuqiang
  * 推送日志

@@ -99,7 +99,12 @@
     </div>
 </template>
 <script>
-import { fetchSmsTmplList, fetchDelSmsTmpl, fetchUpdateSmeTmpl } from "@/api/smsApi";
+import {
+  fetchSmsTmplList,
+  fetchDelSmsTmpl,
+  fetchUpdateSmeTmpl,
+  fetchQuerySmsTmplTask
+} from "@/api/smsApi";
 
 export default {
   data() {
@@ -162,17 +167,17 @@ export default {
     // 查看按钮
     handleCheck: function(index, row) {
       this.showTmplDetail = true;
-      let tmplObj = row
-      let contentArr = row.content
-      let contentString = ''
-      for(let item of contentArr){
-        if(item.type == 'text'){
-          contentString += item.value
-        }else{
-          contentString += item.value //.replace(/^\$\{|\}$/g,'')
+      let tmplObj = row;
+      let contentArr = row.content;
+      let contentString = "";
+      for (let item of contentArr) {
+        if (item.type == "text") {
+          contentString += item.value;
+        } else {
+          contentString += item.value; //.replace(/^\$\{|\}$/g,'')
         }
       }
-      tmplObj.content = contentString
+      tmplObj.content = contentString;
       this.tmplDetail = tmplObj;
     },
     // 编辑按钮
@@ -185,83 +190,116 @@ export default {
       let delObj = {
         id: row.id
       };
-      this.handleDelete(delObj);
+      this.handleDelete(delObj, index);
     },
     handleDelete: function(delObj) {
-      this.$confirm("此操作将删除该短信模板, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          fetchDelSmsTmpl(delObj).then(response => {
-            let [code, data] = [response.data.code, response.data.data];
-            if (code == "000000") {
-              this.tmplList = this.handleData(data);
-              this.$message({
-                type: "success",
-                message: "删除成功!"
+      fetchQuerySmsTmplTask(delObj).then(response => {
+        let [code, data] = [response.data.code, response.data.data]
+        if(code == '000000'){
+          let text = '此操作将删除该短信模板, 是否继续？'
+          if(data.length>0){
+            text = '此操作将删除该短信模板（存在待执行或正在执行的任务）, 是否继续？'
+            text = text + '任务id：'
+            text = this.getTaskText(data, text)
+          }
+          this.$confirm(text, "提示", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          })
+            .then(() => {
+              fetchDelSmsTmpl(delObj).then(response => {
+                let [code, data] = [response.data.code, response.data.data];
+                if (code == "000000") {
+                  // 如果有
+                  // 删除tmplList内记录
+                  let idArr = delObj.id.split(',')
+                  for(let i=0; i<idArr.length; i++){
+                    for(let j=0; j<this.tmplList.length; j++){
+                      if(idArr[i] == this.tmplList[j].id){
+                        this.tmplList.splice(j, 1)
+                        continue
+                      }
+                    }
+                  }
+                  this.$message({
+                    type: "success",
+                    message: "删除成功!"
+                  });
+                }
+                // 发生错误，提示错误
               });
-            }
-            // 发生错误，提示错误
-          });
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
+            })
+            .catch(() => {
+              this.$message({
+                type: "info",
+                message: "已取消删除"
+              });
+            });
+        }
+      }).catch()
     },
     // 状态切换按钮
     handleSwitchStatus: function(row) {
-      console.log('row', row)
+      console.log("row", row);
       // 是否启用（整数1表示启用，2表示不启用，默认为1）
-      let activeStatus = 1
+      let activeStatus = 1;
       // 停用时，如有待执行的任务，则弹出提示，询问是否弃用待执行的任务；
       if (!row.isActive) {
-        const h = this.$createElement;
-        this.$msgbox({
-          title: "消息",
-          message: h("p", null, [
-            h("span", null, "是否"),
-            h("i", { style: "color: red; font-style: normal" }, "停用 已启用 "),
-            h("span", null, "的短信模板？")
-          ]),
-          showCancelButton: true,
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          beforeClose: (action, instance, done) => {
-            if (action === "confirm") {
-              instance.confirmButtonLoading = true;
-              instance.confirmButtonText = "执行中...";
-              let requestObj = {
-                id: row.id,
-                isActive: activeStatus
-              }
-              fetchUpdateSmeTmpl(requestObj).then(response => {
-                let [code, data] = [response.data.code, response.data.data]
-                if(code == '000000'){
-                  instance.confirmButtonLoading = false;
-                  done()
-                }
-              }).catch(
-                //error
-              )
-            } else {
-              done()
-              row.isActive = true;
+        // const h = this.$createElement;
+        let queryObj = {
+          id: row.id
+        }
+        fetchQuerySmsTmplTask(queryObj).then(response => {
+          let [code, data] = [response.data.code, response.data.data];
+          if (code == "000000") {
+            let messageText = '是否停用 已启动 的短信模板？'
+            if(data.length>0){
+              messageText = '是否停用 已启动（存在待执行或执行中的任务）的短信模板？'
+              messageText = messageText + '任务id：'
+              messageText = this.getTaskText(data, messageText)
             }
+            this.$msgbox({
+              title: "消息",
+              message: messageText,
+              showCancelButton: true,
+              confirmButtonText: "确定",
+              cancelButtonText: "取消",
+              beforeClose: (action, instance, done) => {
+                if (action === "confirm") {
+                  instance.confirmButtonLoading = true;
+                  instance.confirmButtonText = "执行中...";
+                  let requestObj = {
+                    id: row.id,
+                    isActive: activeStatus
+                  };
+                  fetchUpdateSmeTmpl(requestObj)
+                    .then(response => {
+                      let [code, data] = [response.data.code, response.data.data];
+                      if (code == "000000") {
+                        instance.confirmButtonLoading = false;
+                        done();
+                      }
+                    })
+                    .catch
+                    //error
+                    ();
+                } else {
+                  done();
+                  row.isActive = true;
+                }
+              }
+            }).then(action => {
+              this.$message({
+                type: "info",
+                message: "短信模板停用成功！"
+              });
+            });
           }
-        }).then(action => {
-          this.$message({
-            type: "info",
-            message: "短信模板停用成功！"
-          });
-        });
-      }else{
+        }).catch()
+      } else {
         //启用
-        activeStatus = 2
+        activeStatus = 2;
         const h = this.$createElement;
         this.$msgbox({
           title: "消息",
@@ -280,16 +318,18 @@ export default {
               let requestObj = {
                 id: row.id,
                 isActive: activeStatus
-              }
-              fetchUpdateSmeTmpl(requestObj).then(response => {
-                let [code, data] = [response.data.code, response.data.data]
-                if(code == '000000'){
-                  instance.confirmButtonLoading = false;
-                  done()
-                }
-              }).catch()
+              };
+              fetchUpdateSmeTmpl(requestObj)
+                .then(response => {
+                  let [code, data] = [response.data.code, response.data.data];
+                  if (code == "000000") {
+                    instance.confirmButtonLoading = false;
+                    done();
+                  }
+                })
+                .catch();
             } else {
-              done()
+              done();
               row.isActive = false;
             }
           }
@@ -318,6 +358,24 @@ export default {
           this.tmplList = this.handleData(data);
         }
       });
+    },
+    // 查询有未执行任务或执行中任务文案
+    getTaskText: function(data, messageText){
+      let limitNum = 3
+      for(let i=0; i<data[0].taskIds.length;i++){
+        messageText += data[0].taskIds[i]
+        if(i<limitNum && i<data[0].taskIds.length-1){
+          messageText += ','
+        }else{
+          break
+        }
+      }
+      if(data[0].taskIds.length <= limitNum){
+        messageText += '-' + data[0].taskIds.length + '个任务'
+      }else{
+        messageText += '...-' + data[0].taskIds.length + '个任务'
+      }
+      return messageText
     },
     // 跳转到新增模板页面
     routeToAdd: function() {

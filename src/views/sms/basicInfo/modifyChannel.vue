@@ -87,7 +87,8 @@ import { fetchChannels, fetchUpdateChannel } from "@/api/smsApi";
                     }
 
                     let query = {
-                        id: this.formDatas.id, 
+                        id: this.formDatas.id,
+                        name: this.formDatas.name,
                         price: Number(this.formDatas.price), 
                         description: this.formDatas.description
                     }

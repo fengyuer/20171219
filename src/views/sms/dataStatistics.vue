@@ -126,13 +126,7 @@ export default {
       chart1: null,
       timeType: 2, //2-历史统计 1-今日统计
       date: "", //日期
-      granularity: 2,
-      granularityOpt: [
-        { label: "小时", value: 1 },
-        { label: "天", value: 2 },
-        { label: "周", value: 3 },
-        { label: "月", value: 4 }
-      ],
+      granularity:2,
       department: "",
       creater: "", //创建人
       templateName: "",
@@ -221,6 +215,7 @@ export default {
           pagination: 0
         })
       ).then(res => {
+        ;
         if (!res) {
           return;
         }
@@ -232,7 +227,6 @@ export default {
       fetchStatistics(
         Object.assign({}, this.queryObj, { pagination: 1 })
       ).then(res => {
-        debugger;
         if (!res) {
           return;
         }
@@ -258,15 +252,15 @@ export default {
     checkChartLists(resData) {
       const { code, message, data } = resData;
       if (code === "000000") {
-          this.dateList =[];
-          this.sendNumList =[];
-          this.sendSuccessNumList=[];
-          this.sendFailureNumList=[];
-          this.priceList=[];
-          this.sendTotal=0;
-          this.successTotal=0;
-          this.failureTotal=0;
-          this.priceTotal=0;
+        this.dateList = [];
+        this.sendNumList = [];
+        this.sendSuccessNumList = [];
+        this.sendFailureNumList = [];
+        this.priceList = [];
+        this.sendTotal = 0;
+        this.successTotal = 0;
+        this.failureTotal = 0;
+        this.priceTotal = 0;
         const chartData = data.data;
         chartData.forEach((item, index) => {
           let date = new Date(item.date);
@@ -446,25 +440,41 @@ export default {
       if (this.channelName) {
         queryObj.channelName = this.channelName;
       }
+      queryObj.granularity = this.granularity;
       return queryObj;
-    }
+    },
+    granularityOpt() {
+      if (this.timeType === 1) {
+        return [{ label: "小时", value: 1 }];
+      } else {
+        if (this.date) {
+          if (this.date[1].getTime() - this.date[0].getTime() > 3600000 * 24) {
+            return [
+              { label: "天", value: 2 },
+              { label: "周", value: 3 },
+              { label: "月", value: 4 }
+            ];
+          } else {
+            return [
+              { label: "小时", value: 1 },
+              { label: "天", value: 2 },
+              { label: "周", value: 3 },
+              { label: "月", value: 4 }
+            ];
+          }
+        } else {
+          return [
+            { label: "天", value: 2 },
+            { label: "周", value: 3 },
+            { label: "月", value: 4 }
+          ];
+        }
+      }
+    },
   },
-
-  watch: {
-    timeType: function(val) {
-      if (val === 2) {
-        this.granularityOpt = [
-          { label: "小时", value: 1 },
-          { label: "天", value: 2 },
-          { label: "周", value: 3 },
-          { label: "月", value: 4 }
-        ];
-        this.granularity = 2;
-      }
-      if (val === 1) {
-        this.granularityOpt = [{ label: "小时", value: 1 }];
-        this.granularity = 1;
-      }
+  watch:{
+    granularityOpt:function(val){
+      this.granularity = val[0].value;
     }
   }
 };
@@ -487,6 +497,9 @@ export default {
   .col {
     margin-right: 40px;
     display: inline-block;
+    .el-input {
+      width: auto;
+    }
   }
   .left {
     float: left;
@@ -511,9 +524,6 @@ export default {
   .el-table td:first-child .cell,
   .el-table th:first-child .cell {
     padding-left: 10px;
-  }
-  .el-input {
-    width: auto;
   }
 }
 </style>

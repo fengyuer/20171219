@@ -17,13 +17,8 @@
             class="sms_table"
             :data="tableData"
             stripe
-            v-loading="loading"
-            @selection-change="selectChange">
+            v-loading="loading">
 
-            <el-table-column 
-                type="selection"
-                width="50"></el-table-column>
-            
             <el-table-column 
                 label="创建时间" 
                 prop="createTime"
@@ -55,29 +50,44 @@
                 </template>
             </el-table-column>
             
-            <el-table-column label="启用状态">
-                <template slot-scope="scope">
-                    <el-switch :plain="true" v-model="scope.row.isActive" @change="onLive" :disabled="!isAdmin"></el-switch>
-                </template>
-            </el-table-column>
         </el-table>
+
+        <!-- 任务列表 -->
+        <el-dialog title="提示" :visible.sync="showTaskList" class="task_pop">
+            <p>当前有任务ID处于待执行状态，若此时删除该短信签名，该任务将会被弃用，是否继续删除？</p>
+
+            <el-table :data="taskList">
+                <el-table-column property="taskId" label="ID"></el-table-column>
+                <el-table-column property="templateName" label="短信模板"></el-table-column>
+            </el-table>
+
+            <div slot="footer" class="dialog-footer">
+                
+                <el-button @click="confirmDel">删除</el-button>
+                <el-button type="primary" @click="cancelDel">取 消</el-button>
+            </div>
+        </el-dialog>
 
     </div>
 </template>
 
 <script>
-import { fetchSignatures, fetchDelSignatures } from "@/api/smsApi";
+import { 
+    fetchSignatures, 
+    fetchDelSignatures,
+    fetchUsedTasks,
+    } from "@/api/smsApi";
 
     export default {
         data(){
             return{
                 loading: false,
-                pageSizes: [2, 4, 6, 8],    // 每页设置
-                total: null,                // 总页数
                 isAdmin: true,              // 是否是管理员
-                searchCon: '',               // 搜索关键字
+                searchCon: '',              // 搜索关键字
                 tableData:[],               // 表格数据
-                selectData:[],              // 选中的内容
+                taskList: [],               // 任务列表
+                showTaskList: false,
+                selectDelObj:{},            // 选择删除的数据
             }
         },
         created() {
@@ -101,84 +111,129 @@ import { fetchSignatures, fetchDelSignatures } from "@/api/smsApi";
                     }
                 })
             },
-            // 删除数据
-            del(ids){
-                fetchDelSignatures(ids).then((res) => {
-                    console.log(res)
-                    if(!res) return
-                    if(res.code==='000000'){
-                        this.$confirm('当前有任务处于待执行状态, 是否弃用?', '提示', {
-                            confirmButtonText: '启用',
-                            cancelButtonText: '取消',
-                            type: 'warning'
-                        }).then(() => {
-                            this.$message({
-                                type: 'success',
-                                message: '删除成功!'
-                            });
-                        }).catch(() => {
-                            this.$message({
-                                type: 'info',
-                                message: '已取消删除'
-                            });          
-                        });
-                    }
-                })
-            },
+
             // 查询
             onSearch(){
                 this.getList()
                 console.log(this.searchCon)
             },
-            // 删除一条
-            delRow(index,rows, row){
-                const query = {
-                    ids: rows[index].id
-                }
-                fetchDelSignatures(query).then((res) => {
-                    console.log(res)
-                    if(!res) return
 
-                    const code =  res.data.code
-                    if(code==='000000'){
-                        this.$confirm('当前有任务处于待执行状态, 是否弃用?', '提示', {
-                            confirmButtonText: '启用',
-                            cancelButtonText: '取消',
-                            type: 'warning'
-                        }).then(() => {
-                            this.$message({
-                                type: 'success',
-                                message: '删除成功!'
-                            });
-                            rows.splice(index,1);
-                        }).catch(() => {
-                            this.$message({
-                                type: 'info',
-                                message: '已取消删除'
-                            });          
-                        });
-                    }
-                })
-            },
-            selectChange(val){
-                console.log(val);
-                this.selectData = val
-            },
-            // 启用状态
-            onLive(val){
-                if(!this.isAdmin){
-                    this.$message({
-                        message: '只有管理员有权限！',
-                        type: 'warning'
-                    });
-                }
-                console.log(val)
-            },
             // 新增签名
             add(){
                 this.$router.push({path:'addSignature'})
             },
+
+            // 删除一条
+            delRow(index,rows){
+                
+                this.selectDelObj.index = index
+                // 调用任务列表
+                this.getTask(rows[index].id, ()=>{
+                    console.log(this.taskList)
+                    if(this.taskList.length > 0){
+                        this.showTaskList =  true
+                    }else{
+                        // 无使用任务
+                        this.confirmDel()
+                    }
+                })
+            },
+
+            // 取消删除
+            cancelDel(){
+                this.showTaskList = false
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
+            },
+
+            // 确认删除
+            confirmDel(){
+                
+                let index = this.selectDelObj.index
+                let lists = this.tableData
+                let id = lists[index].id
+                
+                this.$confirm('您确定要删除此条签名吗？', '提示', {
+                    confirmButtonText: '删除',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    this.delSignature(id,lists,index)
+                }).catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    });      
+                });
+                setTimeout(() => {
+                    this.showTaskList = false
+                },200)
+            },
+
+            // 获取使用签名的任务列表
+            getTask(id,callback){
+                
+                this.taskList = []
+                let params = {
+                    ids: id
+                }
+
+                fetchUsedTasks(params).then(res => {
+                    console.log(res)
+                    if(!res) return
+
+                    let [code, data] = [res.data.code, res.data.data]
+                    if(code === '000000'){
+                        this.taskList = data
+                        callback()
+                    }
+                })
+            },
+
+            // 删除签名-调用删除签名接口
+            delSignature(id,lists,index){
+                let params = {
+                    ids: id
+                }
+                fetchDelSignatures(params).then((res) => {
+                    const code = res.data.code 
+                    if(code === '000000'){
+                        this.showTaskList = false
+                        this.$message({
+                            type: 'success',
+                            message: '签名删除成功!'
+                        });
+                        lists.splice(index,1);
+                    }else{
+                        this.showTaskList = false
+                        this.$message({
+                            type: 'info',
+                            message: '签名删除失败'
+                        }); 
+                    }
+                }).catch(err => {
+                    this.$message({
+                        type: 'info',
+                        message: '系统异常'
+                    }); 
+                })
+
+            },
+
+
         }
-        
     }
 </script>
+<style lang="scss">
+.task_pop {
+    .el-dialog__body{
+        padding: 0 20px 30px
+    }
+    .el-icon-warning{
+        color: #E6A23C
+
+    }
+}
+</style>

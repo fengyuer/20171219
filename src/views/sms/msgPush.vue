@@ -25,17 +25,11 @@
             </div>
             <div class="col">
                 <span>所属部门:</span>
-                <el-select v-model="project" placeholder="请选择">
-                    <el-option v-for="item in projectOpt" :key="item.value" :label="item.label" :value="item.value">
-                    </el-option>
-                </el-select>
+                 <el-input v-model="department" placeholder="请输入内容"></el-input>
             </div>
             <div class="col">
                 <span>创建人:</span>
-                <el-select v-model="creater" placeholder="请选择">
-                    <el-option v-for="item in createrOpt" :key="item.value" :label="item.label" :value="item.value">
-                    </el-option>
-                </el-select>
+                <el-input v-model="creater" placeholder="请输入内容"></el-input>      
             </div>
             <el-button class='search' type="primary" @click="search">查询</el-button>
         </div>
@@ -48,14 +42,11 @@
                 </el-select>
                 <el-input v-model="pageSizeVal" placeholder="" v-if="this.pageSizeOne=='自定义'" @keyup.enter.native="pageSizeChange"></el-input>
             </div>
-            <el-button class="right-button" type="info" plain @click="multipleDel">弃用</el-button>
             <el-button class='right-button' type="info" plain @click="toMarketTask">新增普通任务</el-button>
             <el-button class="right-button"  type="info" plain @click="toAPITask">新增API任务</el-button>        
         </div>
         <div class="row">
-            <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" v-loading.body="dataLoading" @selection-change="handleSelectionChange" :header-row-style="{backgroundColor:'#eee'}">
-                <el-table-column type="selection" width="55" class-name='first_col'>
-                </el-table-column>
+            <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" v-loading.body="dataLoading"  :header-row-style="{backgroundColor:'#eee'}">
                 <el-table-column prop="index" label="序号" width="55">
                 </el-table-column>
                 <el-table-column prop="taskType" label="任务类型" width="120">
@@ -72,23 +63,28 @@
                 </el-table-column>
                 <el-table-column prop="creater" label="创建人">
                 </el-table-column>
-                <el-table-column prop="project" label="所属部门">
+                <el-table-column prop="department" label="所属部门">
                 </el-table-column>
-                <el-table-column prop="status" label="任务状态">
+                <el-table-column prop="statusName" label="任务状态">
                 </el-table-column>
                 <el-table-column label="操作" width="180">
                     <template slot-scope="scope">
-                        <el-button size="mini" type="primary" @click="handleToDetail(scope.$index, scope.row)">查看</el-button>
-                        <el-button size="mini" @click="singleDelete(scope.$index, scope.row)">弃用</el-button>
+                      <div>
+                        <el-button size="mini" type="primary" @click="handleToDetail(scope.$index, scope.row.id)">查看</el-button>
+                        <el-button  v-if="scope.row.status !== 4 && scope.row.status !== 6" size="mini" @click="singleDelete(scope.$index, scope.row)">弃用</el-button>
+                      </div>
+                      <div v-if="scope.row.hasPushLog" class='has-log'>
+                          <el-button size="mini" type="primary">推送日志</el-button>
+                          <el-button size="mini" type="primary" >导出</el-button>
+                      </div>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
-
         <el-pagination class='pagination'  :current-page.sync="currentPage" :page-size="pageSize" layout="total,prev, pager, next, jumper" :total="recordsTotal">
         </el-pagination>
 
-        <el-dialog :visible.sync="detailVisible" :show-close="false">
+        <el-dialog class='detail' :visible.sync="detailVisible" :show-close="false">
             <div slot="title" class="title">任务详情</div>
             <div class='detail'>
                 <div class='item'>
@@ -97,7 +93,7 @@
                 </div>
                 <div class='item'>
                     <span>任务状态：</span>
-                    <span>{{detailData.status}}</span>
+                    <span>{{detailData.status | statusfilter}}</span>
                 </div>
                 <div class='item'>
                     <span>创建人：</span>
@@ -105,7 +101,7 @@
                 </div>
                 <div class='item'>
                     <span>所属部门：</span>
-                    <span>{{detailData.project}}</span>
+                    <span>{{detailData.department}}</span>
                 </div>
                 <div class='item'>
                     <span>短信模板：</span>
@@ -115,35 +111,50 @@
                     <span>短信签名：</span>
                     <span>{{detailData.signName}}</span>
                 </div>
-                <div class='item'>
+                <div class='item'  v-if='detailData.taskType ==="普通任务"'>
                     <span>推送人群：</span>
                     <span>{{detailData.group}}</span>
                 </div>
-                <div class='item'>
+                <div class='item'  v-if='detailData.taskType ==="普通任务"'>
                     <span>推送人数：</span>
                     <span>{{detailData.sendUserNum}}</span>
                 </div>
-                <div class='item'>
+                <div class='item'  v-if='detailData.taskType ==="普通任务"'>
                     <span>推送条数：</span>
                     <span>{{detailData.sendNum}}</span>
                 </div>
-                <div class='item'>
+                <div class='item' v-if='detailData.taskType ==="普通任务"'>
                     <span>推送时间：</span>
                     <span>{{detailData.executeTime}}</span>
                 </div>
                 <div class='item'>
                     <span>推送说明：</span>
-                    <span>{{}}</span>
+                    <span>{{detailData.description}}</span>
                 </div>
             </div>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="detailVisible = false">取 消</el-button>
             </div>
         </el-dialog>
+            <el-dialog
+                        title="提示"
+                        :visible.sync="delConfirmVisible"
+                        width="30%"
+                      >
+                        <span>这是一段信息</span>
+                        <span slot="footer" class="dialog-footer">
+                          <el-button @click="delConfirmVisible = false">取 消</el-button>
+                          <el-button type="primary" @click="handleDelete({ids})">确 定</el-button>
+                        </span>
+                      </el-dialog>
     </div>
 </template>
 <script>
-import { fetchMsgPushList, fetchDelMsgPush } from "@/api/smsApi";
+import {
+  fetchMsgPushList,
+  fetchDelMsgPush,
+  queryPushTaskById
+} from "@/api/smsApi";
 export default {
   data() {
     return {
@@ -151,7 +162,7 @@ export default {
       templateName: "",
       status: "",
       date: "",
-      project: "",
+      department: "",
       creater: "", //创建人
       pageSizeOne: "自定义", //选择
       pageSizeVal: 10, //自定义
@@ -184,38 +195,6 @@ export default {
           label: "已完成"
         }
       ],
-      projectOpt: [
-        {
-          value: "",
-          label: "全部"
-        },
-        {
-          value: "研究院",
-          label: "研究院"
-        },
-        {
-          value: "云群",
-          label: "云群"
-        },
-        {
-          value: "百视通",
-          label: "百视通"
-        }
-      ],
-      createrOpt: [
-        {
-          value: "",
-          label: "全部"
-        },
-        {
-          value: "创建人1",
-          label: "创建人1"
-        },
-        {
-          value: "创建人2",
-          label: "创建人2"
-        }
-      ],
       sizeOpt: [
         {
           value: "自定义",
@@ -239,12 +218,12 @@ export default {
         }
       ],
       tableData: [],
-      multipleSelection: [],
       detailVisible: false,
+      delConfirmVisible: false,
       detailData: {}, //详情数据
       dataLoading: false, //
       recordsTotal: 0, //查询数据总条数
-      ids:''//需要批量删除的id,用逗号分隔
+      ids: "" //需要批量删除的id,用逗号分隔
     };
   },
   created() {
@@ -259,23 +238,19 @@ export default {
       }
       return this.pageSizeOne;
     },
-    // //开始搜索的位置
-    // start() {
-    //   return (this.currentPage - 1) * this.pageSize;
-    // },
     searchQuery() {
       let searchQueryObj = {
-        start: this.currentPage,
+        pageNum: this.currentPage,
         pageSize: this.pageSize
       };
       if (this.id.trim()) {
         searchQueryObj.id = this.id.trim();
       }
-      if (this.project) {
-        searchQueryObj.project = this.project;
+      if (this.department.trim()) {
+        searchQueryObj.department = this.department.trim();
       }
-      if (this.creater) {
-        searchQueryObj.creater = this.creater;
+      if (this.creater.trim()) {
+        searchQueryObj.creater = this.creater.trim();
       }
       if (this.date) {
         searchQueryObj.startTime = this.date[0].getTime();
@@ -305,7 +280,7 @@ export default {
     },
     //处理数据列表
     checkLists(resData) {
-      const {code, message, data} = resData;
+      const { code, message, data } = resData;
       if (code === "000000") {
         let tableData = data.data;
         this.recordsTotal = data.recordsTotal;
@@ -327,24 +302,27 @@ export default {
         tableData.forEach(function(item, index) {
           switch (item.status) {
             case 1:
-              item.status = "未审核";
+              item.statusName = "未审核";
               break;
             case 2:
-              item.status = "已审核（拒绝）";
+              item.statusName = "已审核（拒绝）";
               break;
             case 3:
-              item.status = "已审核（通过）";
+              item.statusName = "已审核（通过）";
               break;
             case 4:
-              item.status = "已完成";
+              item.statusName = "已完成";
               break;
             case 5:
-              item.status = "正常执行";
+              item.statusName = "正常执行";
+              break;
+            case 6:
+              item.statusName = "已弃用";
               break;
           }
           let executeTime = new Date(item.executeTime);
           item.executeTime = executeTime.toLocaleString();
-          item.index = data.start + index + 1;
+          item.index = (data.currentPage - 1) * data.pageSize + index + 1;
         });
         this.tableData = tableData;
       }
@@ -353,28 +331,28 @@ export default {
       console.log(this.searchQuery);
       this.getData();
     },
-    handleSelectionChange(val) {
-      this.multipleSelection = val;
-      const idArr = this.multipleSelection.map(item => {
-        return item.id;
+    handleToDetail(index, id) {
+      console.log(index, id);
+      //this.detailData = row;
+      queryPushTaskById({ id: id }).then(response => {
+        if (!response) {
+          return;
+        }
+        const resData = response.data;
+        const { code, message, data } = resData;
+        if (code === "000000") {
+          this.detailData = data;
+          this.detailVisible = true;
+        }
       });
-      this.ids=idArr.join(',')
-      
-    },
-    handleToDetail(index, row) {
-      console.log(index, row);
-      this.detailData = row;
-      this.detailVisible = true;
     },
     singleDelete(index, row) {
+      this.delConfirmVisible = true;
       console.log(index, row);
-      this.handleDelete({ ids: row.id });
-    },
-    multipleDel() {
-       if(!this.ids) return
-       this.handleDelete({ ids: this.ids });
+      this.ids = row.id;
     },
     handleDelete(idsObj) {
+      this.delConfirmVisible = false;
       this.dataLoading = true;
       fetchDelMsgPush(idsObj).then(response => {
         this.dataLoading = false;
@@ -407,6 +385,24 @@ export default {
       console.log(this.searchQuery);
       this.getData();
     }
+  },
+  filters: {
+    statusfilter(val) {
+      switch (val) {
+        case 1:
+          return "未审核";
+        case 2:
+          return "已审核（拒绝）";
+        case 3:
+          return "已审核（通过）";
+        case 4:
+          return "已完成";
+        case 5:
+          return "正常执行";
+        case 6:
+          return "已弃用";
+      }
+    }
   }
 };
 </script>
@@ -417,7 +413,7 @@ export default {
     margin-right: 40px;
     display: inline-block;
     .el-input {
-      width: 300px;
+      width: auto;
       margin-right: 20px;
     }
     &.page_size {
@@ -465,6 +461,9 @@ export default {
   float: right;
   margin-left: 10px;
 }
+.has-log {
+  margin-top: 10px;
+}
 </style>
 <style lang="scss">
 .msg_push {
@@ -472,9 +471,11 @@ export default {
   .el-table th:first-child .cell {
     padding-left: 10px;
   }
-  .el-dialog__header,
-  .el-dialog__body {
-    padding: 0;
+  .detail {
+    .el-dialog__header,
+    .el-dialog__body {
+      padding: 0;
+    }
   }
 }
 </style>

@@ -12,13 +12,6 @@
                 <el-input v-model="addDatas.name" placeholder="请输入签名名称"></el-input>
             </el-form-item>
 
-            <el-form-item label="是否启用:" prop="isActive">
-                <el-select v-model="addDatas.isActive">
-                    <el-option label="是" value="yes"></el-option>
-                    <el-option label="否" value="no"></el-option>
-                </el-select>
-            </el-form-item>
-
             <el-form-item label="说明:">
                 <el-input type="textarea" v-model="addDatas.description" placeholder="请描述您的业务使用场景"></el-input>
             </el-form-item>
@@ -62,7 +55,7 @@
                     width="50" 
                     :selectable='checkboxInit'></el-table-column>
                 <el-table-column property="id" label="通道id" width="150"></el-table-column>
-                <el-table-column property="name" label="通道名称" width="200"></el-table-column>
+                <el-table-column property="name" label="通道名称"></el-table-column>
                 <el-table-column property="price" label="通道单价"></el-table-column>
             </el-table>
             <div slot="footer" class="dialog-footer">
@@ -84,7 +77,6 @@ import { fetchAddSignature, fetchChannels } from "@/api/smsApi";
                 addDatas:{
                     edit: false,
                     name:'',
-                    isActive: '',
                     description: '',
                 },
                 channelList:[],
@@ -95,11 +87,7 @@ import { fetchAddSignature, fetchChannels } from "@/api/smsApi";
                         {
                             required: true, message:'请输入签名名称', trigger:'blur'
                         }
-                    ],
-                    isActive:{
-                        required: true
-                    }
-
+                    ]
                 },
             }
         },
@@ -160,7 +148,6 @@ import { fetchAddSignature, fetchChannels } from "@/api/smsApi";
                     }
                     let query = {
                         name: this.addDatas.name, 
-                        isActive: this.addDatas.isActive ==='是'? 1 : 2, 
                         description: this.addDatas.description, 
                         channelName: this.addedChannels.map(v => v.name).join('、')
                     }
@@ -208,13 +195,5 @@ import { fetchAddSignature, fetchChannels } from "@/api/smsApi";
                 }
             }
         }
-    }
-    .channel_select_value{
-        position: absolute;
-        z-index: 2;
-        background: #fff;
-        margin-top: 7px;
-        margin-left: 17px;
-        padding: 1px 4px;
     }
 </style>

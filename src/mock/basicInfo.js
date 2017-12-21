@@ -12,7 +12,7 @@ const signatureLists = []
 const signatureCount = Mock.mock('@natural(0, 8)')
 for (let i = 0; i < signatureCount; i++) {
   signatureLists.push(Mock.mock({
-    'id|+1': `SG${'@natural(001,1000)'}`,
+    'id|+1': `SG${'@natural(100,120)'}`,
     'name': '@first',
     'channelName': '@last',
     'creater': '@cname',
@@ -72,32 +72,33 @@ const delSignature = function(config) {
     }
   }
 }
-// 执行状态 执行列表
-// -- 是否批量删除待确认 先按单个删除
-const SignatureUsedData = function(config) {
-  const { id } = param2Obj(config.url)
 
-  const usedList = Mock.mock({
-    'usedList|0-3': {
-      id: '@guid',
-      'templateName': '@last'
-    }
-  })
+//  短信签名任务列表总数据
+const allTasks = []
+const allTasksCount = Mock.mock('@natural(10, 500)')
+for (let i = 0; i < allTasksCount; i++) {
+  allTasks.push(Mock.mock({
+    'id|+1': `SG${'@natural(100,130)'}`,
+    'name': '@first',
+    'taskList|0-5': [
+      {
+        taskId: `T${'@natural(001,100)'}`,
+        'templateName': '@last'
+      }
+    ]
+  }))
+}
+
+// 执行状态 执行列表2.1.24
+const signatureUsedTasks = function(config) {
+  const { ids = '' } = param2Obj(config.url)
+  const searchList = queryListsById(ids, allTasks)
 
   return {
     code: '000000',
-    message: '删除成功',
-    data: {
-      id,
-      usedList: usedList
-    }
-
+    message: '成功',
+    data: searchList.length > 0 ? searchList[0].taskList : []
   }
-}
-
-// 短信签名启用状态
-const toOpenSignature = function(config) {
-
 }
 
  /**
@@ -135,7 +136,7 @@ const queryChannels = function(config) {
 
 //  短信通道修改2.1.16
 const updateChannel = function(config) {
-  const { id, price, description } = param2Obj(config.url)
+  const { id, name, price, description } = param2Obj(config.url)
 
   const newObj = {
     id,
@@ -170,6 +171,15 @@ function queryLists(params, lists) {
   return lists.filter(filterObj(params.key))
 }
 
+// 根据id查询列表
+function queryListsById(ids, lists) {
+  const filterObj = searchObj => obj => {
+    return obj.id.includes(searchObj)
+  }
+
+  return lists.filter(filterObj(ids))
+}
+
 // 删除
 const delByIds = (ids, lists) => {
   const idsArr = ids.split(',')
@@ -197,8 +207,7 @@ export default {
   querySignatures,
   addSignature,
   delSignature,
-  toOpenSignature,
-  SignatureUsedData,
+  signatureUsedTasks,
 // 短信通道
   queryChannels,
   updateChannel

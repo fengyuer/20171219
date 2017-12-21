@@ -25,7 +25,7 @@ const smsIndex = Mock.mock({
 // 短信任务数据mock
 const msgPushList = []
 // 详情的缓存
-const msgPushDetails = []
+// const msgPushDetails = []
 const msgPushCount = Mock.mock('@integer(0,100)')
 for (let i = 0; i < msgPushCount; i++) {
   msgPushList.push(
@@ -35,16 +35,23 @@ for (let i = 0; i < msgPushCount; i++) {
       id: '@id',
       sendUserNum: '@integer(0, 1000)',
       sendNum: '@integer(0, 1000)',
+      createTime: Date.now() + Mock.mock('@integer(-1000000000,1000000000)'), // （申请时间）
+      templateContent: '模板内容',
+      'channelName|1': ['通道1', '通道2'],
       'creater|1': ['创建人1', '创建人2'],
       templateName: '@ctitle',
-      'project|1': ['研究院', '云群', '百视通'],
-      'status|1': [1, 2, 3, 4, 5],
+      'department|1': ['研究院', '云群', '百视通'],
+      'status|1': [1, 2, 3, 4, 5, 6],
       'signName|1': ['签名1', '签名2'],
       group: '东方购物游戏爱好者',
-      isDel: false // 是否弃用
+      isDel: false, // 是否弃用
+      'description|1': ['推送说明1', '推送说明2'],
+      checkDescription: '审核说明',
+      'hasPushLog|1': [true, false]  // （”推送日志是否存在”）
     })
   )
 }
+
 /**
  * 新增普通任务 1
  * author:chn
@@ -127,7 +134,7 @@ export function addApiTask(config) {
  * author:chn
  * @param {*} config
  */
-export function queryPushTastById(config) {
+export function queryPushTaskById(config) {
   const { id } = param2Obj(config.url)
   if (!id) {
     return {
@@ -137,14 +144,15 @@ export function queryPushTastById(config) {
       }
     }
   }
-  let rst = queryLists({ id }, msgPushDetails)
+  let rst = queryLists({ id }, msgPushList)
   if (rst) {
     rst = _.cloneDeep(rst)
   }
+  console.log(rst)
   return {
     'code': '000000',
     'message': '成功',
-    'data': rst
+    'data': rst[0]
   }
 }
 /**
@@ -154,17 +162,28 @@ export function queryPushTastById(config) {
  */
 export function queryPushTaskList(config) {
   const urlObj = param2Obj(config.url)
-  const { id, project, status, templateName, creater } = param2Obj(config.url)
-  const searchList = _.cloneDeep(queryLists({ id, project, status, templateName, creater }, msgPushList))
-  const pageList = searchList.slice((urlObj.start - 1) * urlObj.pageSize, urlObj.pageSize)
+  const { id, department, templateName, creater, startTime, endTime } = param2Obj(config.url)
+  const status = parseInt(param2Obj(config.url).status)
+  let searchList = _.cloneDeep(queryLists({ id, department, status, templateName, creater }, msgPushList))
+  if (startTime) {
+    searchList = searchList.filter((item) => {
+      return item.executeTime >= startTime
+    })
+  }
+  if (endTime) {
+    searchList = searchList.filter((item) => {
+      return item.executeTime <= endTime
+    })
+  }
+  const pageList = searchList.slice((urlObj.pageNum - 1) * urlObj.pageSize, urlObj.pageNum * urlObj.pageSize)
   return Mock.mock({
     code: '000000',
     message: '成功',
     data: {
-      start: urlObj.start,
+      currentPage: urlObj.pageNum,
       pageSize: urlObj.pageSize,
       recordsTotal: searchList.length,
-      data: pageList
+      data: parseInt(urlObj.pagination) ? searchList : pageList
     }
   })
 }
@@ -405,7 +424,7 @@ const sendCount = Mock.mock('@integer(0,100)')
 for (let i = 0; i < sendCount; i++) {
   sendList.push(
     Mock.mock({
-      'project|1': ['研究院', '云群', '百视通'],
+      'department|1': ['研究院', '云群', '百视通'],
       creater: '@cname',
       'templateName|1': ['模板1', '模板1'],
       signName: ['签名1', '签名2'],
@@ -433,7 +452,7 @@ for (let i = 0; i < sendCount; i++) {
 // 查询短信发送的数目接口 mock
 function getSendCount(config) {
   const {
-    project,
+    department,
     creater,
     startTime,
     endTime,
@@ -442,7 +461,7 @@ function getSendCount(config) {
     channelName
   } = param2Obj(config.url)
   const searchList = sendList.filter(item => {
-    if (project && item.project !== project) return false
+    if (department && item.department !== department) return false
     if (creater && item.creater !== creater) return false
     if (startTime && item.executeTime < startTime) return false
     if (endTime && item.executeTime > endTime) return false
@@ -636,6 +655,7 @@ export default {
     return smsIndex
   },
   // 短信任务
+  queryPushTaskById,
   delMsgPush,
   getMsgPushList: queryPushTaskList,
   // getPropelList: queryPushLog, // 短信任务分页查询接口-wuqiang
@@ -643,7 +663,7 @@ export default {
   // getSmsTmplList,
   delSmsTmpl,
   signatures,
-  // 系统管理　接口函数　wuhui
+  // 系统管理 接口函数 wuhui
   systemGetList, systemUpdate,
   // 用户管理
   userGetList,

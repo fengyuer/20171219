@@ -103,7 +103,7 @@
     </div>
 </template>
 <script>
-import { fetchSmsTmplList, fetchUpdateSmeTmpl } from "@/api/smsApi";
+import { fetchSmsTmplList, fetchUpdateSmeTmpl, fetchAddSmeTmpl } from "@/api/smsApi";
 
 export default {
   data() {
@@ -337,10 +337,34 @@ export default {
           }
         }).catch()
       }else{
+        let isEmpty = (this.msgTmpl.name == '') || (sortedDate.content.length == 0)
+        if(isEmpty){
+          this.$message({
+            type: "warning",
+            message: "短信模板名称或者内容不能为空!"
+          });
+          return
+        }
         // 新建短信模板
         let requestData = {
-          
+          name: this.msgTmpl.name,
+          content: sortedDate.content,
+          isActive: 1,
+          params: sortedDate.params,
+          descripton: this.msgTmpl.intro
         }
+        console.log('新建短信模板requestData', requestData)
+        fetchAddSmeTmpl(requestData).then(response => {
+          let [code, data] = [response.data.code, response.data.data];
+          console.log(response)
+          if(code == '000000'){
+            // 更新成功
+            this.$message({
+              type: "success",
+              message: "短信模板新建成功!"
+            });
+          }
+        }).catch()
       }
     },
     sortData: function(){

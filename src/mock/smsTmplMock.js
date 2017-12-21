@@ -129,9 +129,46 @@ function updateSmsTmpl(config){
   }
 }
 
+function addSmsTmpl(config){
+  return {
+    code: '000000',
+    data: '新增模板成功!'
+  }
+}
+
+// 2.1.23	根据短信模板id列表查询待执行和正在执行的任务
+function querySmsTmplTask(objString){
+  return {
+    code: '000000',
+    message: '成功',
+    data: makeSmsTmplTask()
+  }
+}
+function makeSmsTmplTask(taskCount=Mock.mock('@integer(0,3)')){
+  let smsTmplTaskList = []
+  for(let i=0;i<taskCount;i++){
+    let taskObj = {
+      templateName: Mock.mock('@cword(3,10)'),
+      taskIds: makeTaskIds()
+    }
+    smsTmplTaskList.push(taskObj)
+  }
+  return smsTmplTaskList
+}
+function makeTaskIds(count=Mock.mock('@integer(1,30)')){
+  let ids = []
+  for(let i=0;i<count;i++){
+    let id = Mock.mock('@natural(10000000,99999999)')
+    ids.push(id)
+  }
+  return ids
+}
+
 export default {
   getSmsTmplList,
   delSmsTmpl,
   querySmsTmplList,
-  updateSmsTmpl
+  updateSmsTmpl,
+  addSmsTmpl,
+  querySmsTmplTask
 }

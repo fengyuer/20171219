@@ -28,8 +28,8 @@ for (let i = 0; i < statisCount; i++) {
 function queryStatisList(config) {
   const urlObj = param2Obj(config.url)
   const { startTime, endTime, granularity, department, creater, templateName, signName, channelName } = param2Obj(config.url)
-  const searchList = _.cloneDeep(queryLists({ startTime, endTime, granularity, department, creater, templateName, signName, channelName }, statisList))
-  debugger
+  // const searchList = _.cloneDeep(queryLists({ startTime, endTime, granularity, department, creater, templateName, signName, channelName }, statisList))
+  const searchList = statisList
   const pageList = searchList.slice((urlObj.pageNum - 1) * urlObj.pageSize, urlObj.pageNum * urlObj.pageSize)
   return Mock.mock({
     code: '000000',

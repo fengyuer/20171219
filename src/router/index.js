@@ -78,6 +78,12 @@ export const constantRouterMap = [
         name: '新增API任务',
         component: _import('sms/addAPITask'),
         meta: { role: 'admin' }
+      },
+      {
+        path: 'addCommonTask',
+        component: _import('sms/addCommonTask'),
+        name: '新增营销任务 ',
+        meta: { role: 'admin' }
       }
     ]
   },
@@ -155,7 +161,7 @@ export const constantRouterMap = [
         component: _import('sms/sysMgr/SystemSettings')
       }
     ]
-  },
+  }
 
 ]
 
